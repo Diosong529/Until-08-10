@@ -5,7 +5,7 @@
 
 ![티저 영상](media/teaser.gif)
 
-▶ [고화질 티저 영상 (MP4)](media/teaser.mp4) · 📱 [릴스·쇼츠용 세로 티저 (1080×1920, 사운드 포함)](media/teaser_reels.mp4)
+▶ [고화질 티저 영상 (MP4)](media/teaser.mp4) · 📱 [릴스·쇼츠용 세로 티저 (1080×1920, 효과음만 포함)](media/teaser_reels.mp4)
 
 AI 이어폰, 카메라 안경, 스마트워치처럼 시험장 밖 AI에게 답을 묻는 수법이 늘고 있습니다.
 당신은 검색대 감독관입니다. 응시자의 몸을 돌려 보고, 확대하고, 도구로 조사한 뒤
@@ -98,7 +98,7 @@ itch.io, Netlify Drop 배포 방법은 [`docs/README.md`](docs/README.md)를 보
 ├── README.md            이 문서
 ├── media/
 │   ├── teaser.mp4       티저 영상 (1280×720, 30fps)
-│   ├── teaser_reels.mp4 릴스·쇼츠용 세로 티저 (1080×1920, 28초, 효과음·비트)
+│   ├── teaser_reels.mp4 릴스·쇼츠용 세로 티저 (1080×1920, 28초, 효과음만 · 배경음악은 릴스에서 추가)
 │   └── teaser.gif       README용 미리보기
 └── docs/                게임 본체 (정적 사이트 루트)
     ├── index.html       게임 코드 (HTML·CSS·JS 한 파일)
