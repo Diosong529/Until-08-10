@@ -707,7 +707,12 @@ part(cyl(.016,.019,.17,10),'#16161a',wand,{pos:[.2,0,0],rot:[0,0,Math.PI/2]});
 part(cap(.045,.15,10),'#2f3138',wand,{pos:[0,0,0],rot:[0,0,Math.PI/2],scale:[1,1,.35]});
 part(box(.13,.012,.034),'#f2c230',wand,{pos:[0,0,0],ol:0});
 const wandLed=part(sph(.011,10,8),'#333',wand,{pos:[.12,.025,0],ol:0,mat:new THREE.MeshBasicMaterial({color:'#333'})});
-wand.visible=false;scene.add(wand);
+wand.scale.setScalar(1.5);wand.visible=false;scene.add(wand);
+// 탐지기가 지나가는 높이를 보여주는 스캔 고리
+const scanRing=new THREE.Group();
+const scanLine=new THREE.Mesh(new THREE.TorusGeometry(.33,.006,8,64),new THREE.MeshBasicMaterial({color:'#1f63c6',transparent:true,opacity:.85,depthWrite:false}));
+const scanDisc=new THREE.Mesh(new THREE.CircleGeometry(.33,64),new THREE.MeshBasicMaterial({color:'#1f63c6',transparent:true,opacity:.12,depthWrite:false,side:THREE.DoubleSide}));
+scanLine.rotation.x=scanDisc.rotation.x=Math.PI/2;scanRing.add(scanLine,scanDisc);scanRing.visible=false;scene.add(scanRing);
 
 // 조명: 툰 셰이딩이 또렷하게 갈리도록 키 라이트 하나 + 부드러운 앰비언트
 scene.add(new THREE.HemisphereLight('#ffffff','#b8b0a2',1.2));
@@ -1123,19 +1128,31 @@ function sweep(kind){
   const order=['head','eyes','chest','lhand','rhand','pants','shoes'];
   const p=S.cur,val={};
   order.forEach(z=>{val[z]=kind==='detect'?Math.min(3,p.items[z].reduce((s,id)=>s+ITEMS[id].metal,0)):p.items[z].some(id=>ITEMS[id].radio)?1:0});
+  // 동작 줄이기 설정에서도 탐지 과정은 보여 준다. 좌우 흔들림만 뺀다.
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const fired={};const ledOff=new THREE.Color('#333'), ledOn=new THREE.Color(kind==='detect'?'#ff3b30':'#b46bff');
-  wand.visible=true;
-  tween(reduce?10:1800,k=>{
-    const y=1.82-k*1.78, x=Math.sin(k*Math.PI*7)*.12;
-    const wp=person.localToWorld(new THREE.Vector3(x,y,.34));wand.position.copy(wp);wand.rotation.set(0,cam.yaw,0);
-    let lit=false;
+  const T=TOOLS[kind],col=kind==='detect'?'#1f63c6':'#7b3fd1',hitCol=kind==='detect'?'#ff3b30':'#b46bff';
+  const fired={};const ledOff=new THREE.Color('#333'), ledOn=new THREE.Color(hitCol);
+  const live=p.ins[kind+'Val']={};
+  scanLine.material.color.set(col);scanDisc.material.color.set(col);
+  wand.visible=scanRing.visible=true;
+  const status=z=>{const hits=order.filter(q=>fired[q]&&val[q]);
+    $('#modeTxt').textContent=`${T.name} 스캔 중 · ${z?ZONES[z].name:'머리'}${hits.length?` · 반응 ${hits.length}곳`:''}`};
+  status(null);
+  tween(3200,k=>{
+    const y=1.84-k*1.8, x=reduce?0:Math.sin(k*Math.PI*9)*.13;
+    const wp=person.localToWorld(new THREE.Vector3(x,y,.36));wand.position.copy(wp);wand.rotation.set(0,cam.yaw,0);
+    scanRing.position.copy(person.localToWorld(new THREE.Vector3(0,y,0)));
+    let lit=false,cur=null;
     order.forEach(z=>{const c=zc(z),s=ZONES[z].s;const zy=c[1];
-      if(val[z]&&Math.abs(y-zy)<s[1]/2)lit=true;
-      if(!fired[z]&&y<=zy){fired[z]=1;if(val[z]){if(kind==='detect')beep(300+val[z]*260,.12+val[z]*.05,'square',.04+val[z]*.015);else beep(1200,.07,'sine',.04)}}});
+      if(Math.abs(y-zy)<s[1]/2){cur=cur||z;if(val[z])lit=true}
+      if(!fired[z]&&y<=zy){fired[z]=1;live[z]=val[z];status(z);
+        if(val[z]){if(kind==='detect')beep(300+val[z]*260,.12+val[z]*.05,'square',.04+val[z]*.015);else beep(1200,.07,'sine',.04)}}});
     wandLed.material.color.copy(lit?ledOn:ledOff);
+    scanLine.material.color.set(lit?hitCol:col);scanDisc.material.color.set(lit?hitCol:col);
+    scanDisc.material.opacity=lit?.28:.12;
+    const pulse=lit&&!reduce?1+.06*Math.sin(performance.now()/40):1;scanRing.scale.setScalar(pulse);
   },()=>{
-    wand.visible=false;S.busy=false;p.ins[kind+'Val']=val;
+    wand.visible=scanRing.visible=false;S.busy=false;p.ins[kind+'Val']=val;
     const hits=order.filter(z=>val[z]);
     if(kind==='detect')log('금속탐지',hits.length?hits.map(z=>`${ZONES[z].name} ${'▮'.repeat(val[z])}${'▯'.repeat(3-val[z])}`).join(' · '):'전신에서 반응 없음.','k-detect');
     else log('전파탐지',hits.length?hits.map(z=>ZONES[z].name).join(', ')+'에서 무선 신호 감지.':'무선 신호 없음.','k-radio');
