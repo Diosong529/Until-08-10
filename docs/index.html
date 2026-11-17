@@ -165,6 +165,16 @@ button:focus-visible{outline:3px solid var(--scan);outline-offset:2px}
 }
 @media (max-width:900px) and (prefers-reduced-motion:reduce){.side{transition:none}}
 .err{padding:20px;color:var(--red);font-weight:700}
+.share{margin-top:14px;padding-top:12px;border-top:1px dashed var(--rule);display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start}
+@media (max-width:480px){.share{grid-template-columns:96px minmax(0,1fr)}}
+.share .thumb{border:1.5px solid var(--ink);box-shadow:3px 3px 0 var(--ink);background:var(--paper);aspect-ratio:4/5;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);cursor:zoom-in;overflow:hidden}
+.share .thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.share .s-title{font-size:11px;letter-spacing:.12em;color:var(--red);font-weight:700;margin-bottom:6px}
+.share .s-btns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.share .s-btns button{background:var(--sheet);border:1.5px solid var(--ink);padding:8px 6px;font-size:12.5px;font-weight:700;min-height:38px}
+.share .s-btns button.prime{background:var(--red);border-color:var(--red);color:#fff;grid-column:1/-1}
+.share .s-btns button:disabled{opacity:.45;cursor:progress}
+.share .s-btns button:active{transform:translate(1px,1px)}
 </style>
 
 </head>
@@ -1048,7 +1058,7 @@ function timeUp(){
   if(S.ended)return;S.ended=true;
   toast('08:10 입실 마감. 남은 응시자는 처리하지 못했습니다.');
   const left=[...(S.cur?[S.cur]:[]),...S.queue];
-  left.forEach(p=>S.results.push({p,verdict:null,pts:PTS.left}));
+  left.forEach(p=>S.results.push({p,verdict:null,pts:PTS.left,day:S.day}));
   S.score+=PTS.left*left.length;S.queue=[];S.cur=null;endDay();
 }
 function log(kind,text,cls){S.cur.ins.log.push({t:clock(S.t),kind,text,cls});renderLog();
@@ -1135,7 +1145,7 @@ function sweep(kind){
 function decide(catchIt){
   if(!S.cur||S.busy)return;
   const p=S.cur;const pts=catchIt?(p.cheat?PTS.catch:PTS.wrongCatch):(p.cheat?PTS.miss:PTS.pass);
-  S.score+=pts;S.results.push({p,verdict:catchIt?'catch':'pass',pts});
+  S.score+=pts;S.results.push({p,verdict:catchIt?'catch':'pass',pts,day:S.day});
   beep(catchIt?220:660,.15,'sawtooth',.03);
   toast(catchIt?`${p.name} 응시자를 퇴실 조치했습니다.`:`${p.name} 응시자를 입실시켰습니다.`);
   S.cur=null;
@@ -1202,27 +1212,159 @@ function endDay(){
   const daySum=S.results.reduce((s,r)=>s+r.pts,0), lastDay=S.day>=5;
   modal(`<div class="eyebrow">근무 ${S.day}일차 결과</div><h2>${clock(S.t)} 검문 종료</h2>
   <div class="tbl-wrap"><table class="score-table"><thead><tr><th>응시자</th><th>판정</th><th>실제</th><th style="text-align:right">점수</th></tr></thead><tbody>${rows}</tbody></table></div>
-  <p>오늘 <b>${daySum>0?'+':''}${daySum}점</b> · 누적 <b>${S.score}점</b></p>`,
+  <p>오늘 <b>${daySum>0?'+':''}${daySum}점</b> · 누적 <b>${S.score}점</b></p>${SHARE_SLOT}`,
   lastDay?'최종 평가 보기':'다음 날로',()=>{if(lastDay)final();else{S.day++;briefing()}});
+  const st=tally(S.all),rk=rankOf(st,S.day);
+  shareBox({final:false,day:S.day,score:S.score,daySum,st,title:rk.title});
 }
 function final(){
-  const c=k=>S.all.filter(k).length;
-  const caught=c(r=>r.verdict==='catch'&&r.p.cheat), wrong=c(r=>r.verdict==='catch'&&!r.p.cheat),
-    miss=c(r=>r.verdict==='pass'&&r.p.cheat), ok=c(r=>r.verdict==='pass'&&!r.p.cheat), left=c(r=>!r.verdict);
-  const acc=Math.round((caught+ok)/Math.max(1,S.all.length)*100);
-  let title,txt;
-  if(acc>=88&&wrong<=1){title='명감독관';txt='부정행위자는 빠짐없이 걸렀고 억울한 수험생은 거의 없었습니다. 내년에도 이 시험장을 맡아 달라는 요청이 왔습니다.'}
-  else if(wrong>=4){title='공포의 감독관';txt='잡아낸 사람도 많았지만 죄 없는 수험생까지 퇴실시켰습니다. 교육청 민원 게시판이 당신 이야기로 가득합니다.'}
-  else if(miss>=4){title='구멍 난 검색대';txt='시험이 끝난 뒤 이어폰과 카메라 안경이 무더기로 적발됐습니다. 이 시험장 성적은 재검토 대상이 됐습니다.'}
-  else if(left>=5){title='느림보 감독관';txt='꼼꼼했지만 너무 느렸습니다. 마감 시간을 넘겨 들어가지 못한 수험생의 학부모들이 항의하고 있습니다.'}
-  else{title='평범한 감독관';txt='큰 사고 없이 시험이 끝났습니다. 다만 놓친 사람과 억울한 사람이 몇 명 있었습니다.'}
+  const st=tally(S.all),{caught,wrong,miss,ok,left,acc}=st,{title,txt}=rankOf(st,5);
   let best=0;try{best=+localStorage.getItem('exam-best')||0;if(S.score>best)localStorage.setItem('exam-best',S.score)}catch(e){}
   modal(`<div class="eyebrow">5일 근무 최종 평가</div><h1>${title}</h1><p>${txt}</p>
   <div class="pointgrid"><span>부정행위 적발</span><span>${caught}명</span><span>정상 입실</span><span>${ok}명</span>
   <span>무고한 수험생 퇴실</span><span class="bad">${wrong}명</span><span>부정행위자 통과</span><span class="bad">${miss}명</span>
   <span>마감으로 미처리</span><span>${left}명</span><span>판정 정확도</span><span>${acc}%</span>
-  <span><b>최종 점수</b></span><span><b>${S.score}</b></span>${best?`<span>이전 최고 점수</span><span>${best}</span>`:''}</div>`,
+  <span><b>최종 점수</b></span><span><b>${S.score}</b></span>${best?`<span>이전 최고 점수</span><span>${best}</span>`:''}</div>${SHARE_SLOT}`,
   '처음부터 다시',()=>{S.day=1;S.score=0;S.all=[];briefing()});
+  shareBox({final:true,day:5,score:S.score,st,title,best});
+}
+// ═════════ 결과 공유: 카드 이미지 · SNS ═════════
+function tally(list){
+  const c=k=>list.filter(k).length;
+  const caught=c(r=>r.verdict==='catch'&&r.p.cheat), wrong=c(r=>r.verdict==='catch'&&!r.p.cheat),
+    miss=c(r=>r.verdict==='pass'&&r.p.cheat), ok=c(r=>r.verdict==='pass'&&!r.p.cheat), left=c(r=>!r.verdict);
+  return{caught,wrong,miss,ok,left,total:list.length,acc:Math.round((caught+ok)/Math.max(1,list.length)*100)};
+}
+// days: 지금까지 근무한 일수. 중간 평가는 기준을 근무 일수에 비례해 낮춘다.
+function rankOf({acc,wrong,miss,left},days=5){
+  const f=days/5,lim=n=>Math.max(2,Math.ceil(n*f));
+  if(acc>=88&&wrong<=1)return{title:'명감독관',txt:'부정행위자는 빠짐없이 걸렀고 억울한 수험생은 거의 없었습니다. 내년에도 이 시험장을 맡아 달라는 요청이 왔습니다.'};
+  if(wrong>=lim(4))return{title:'공포의 감독관',txt:'잡아낸 사람도 많았지만 죄 없는 수험생까지 퇴실시켰습니다. 교육청 민원 게시판이 당신 이야기로 가득합니다.'};
+  if(miss>=lim(4))return{title:'구멍 난 검색대',txt:'시험이 끝난 뒤 이어폰과 카메라 안경이 무더기로 적발됐습니다. 이 시험장 성적은 재검토 대상이 됐습니다.'};
+  if(left>=lim(5))return{title:'느림보 감독관',txt:'꼼꼼했지만 너무 느렸습니다. 마감 시간을 넘겨 들어가지 못한 수험생의 학부모들이 항의하고 있습니다.'};
+  return{title:'평범한 감독관',txt:'큰 사고 없이 시험이 끝났습니다. 다만 놓친 사람과 억울한 사람이 몇 명 있었습니다.'};
+}
+const SHARE_SLOT=`<div class="share" id="share"><div class="thumb" id="shThumb">카드 만드는 중…</div><div>
+  <div class="s-title">결과 공유</div>
+  <div class="s-btns">
+    <button class="prime" id="shNative" hidden>공유하기</button>
+    <button id="shSave" disabled>이미지 저장</button>
+    <button id="shCopy">링크 복사</button>
+    <button id="shX">X (트위터)</button>
+    <button id="shThreads">스레드</button>
+    <button id="shFb">페이스북</button>
+    <button id="shBand">밴드</button>
+  </div></div></div>`;
+const GAME_URL=(()=>{const h=location.hostname;
+  return /^https?:$/.test(location.protocol)&&h&&h!=='localhost'&&!/^127\.|^192\.168\.|^10\./.test(h)?location.origin+location.pathname.replace(/index\.html$/,''):'https://diosong529.github.io/Until-08-10/'})();
+const outcome=r=>!r.verdict?'left':r.verdict==='catch'?(r.p.cheat?'hit':'wrong'):(r.p.cheat?'miss':'ok');
+let shareURL=null;
+function shareText(d){
+  const head=d.final?`5일 근무 최종 평가: 「${d.title}」`:`근무 ${d.day}일차 · 중간 평가 「${d.title}」`;
+  return `[입실 마감 08:10] ${head}\n누적 ${d.score}점 · 판정 정확도 ${d.st.acc}% · 부정행위자 ${d.st.caught}명 적발\n수능 시험장 검색대에서 AI 부정행위자를 가려내 보세요.\n#입실마감0810 #수능 #부정행위검문`;
+}
+function shareBox(d){
+  const text=shareText(d),url=GAME_URL,file=`until-0810-${d.final?'final':'day'+d.day}.png`;
+  let blob=null;
+  const thumb=$('#shThumb'),save=$('#shSave'),nat=$('#shNative');
+  const open=u=>window.open(u,'_blank','noopener,width=620,height=560');
+  const copy=async()=>{const t=`${text}\n${url}`;
+    try{await navigator.clipboard.writeText(t);toast('결과 문구와 링크를 복사했습니다.')}
+    catch(e){const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy');toast('결과 문구와 링크를 복사했습니다.')}catch(_){toast('복사하지 못했습니다.')}ta.remove()}};
+  const download=()=>{if(!blob)return;const a=document.createElement('a');a.href=shareURL;a.download=file;document.body.appendChild(a);a.click();a.remove();toast('결과 카드 이미지를 저장했습니다.')};
+  save.onclick=download;
+  thumb.onclick=()=>{if(shareURL)window.open(shareURL,'_blank','noopener')};
+  $('#shCopy').onclick=copy;
+  $('#shX').onclick=()=>open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+  $('#shThreads').onclick=()=>open(`https://www.threads.net/intent/post?text=${encodeURIComponent(text+'\n'+url)}`);
+  $('#shFb').onclick=()=>open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`);
+  $('#shBand').onclick=()=>open(`https://band.us/plugin/share?body=${encodeURIComponent(text+'\n'+url)}&route=${encodeURIComponent(url)}`);
+  if(navigator.share){nat.hidden=false;nat.onclick=async()=>{
+    try{const f=blob&&new File([blob],file,{type:'image/png'});
+      if(f&&navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],text:`${text}\n${url}`});
+      else await navigator.share({title:'입실 마감 08:10',text,url});
+    }catch(e){if(e.name!=='AbortError')copy()}}}
+  drawCard(d).then(c=>c.toBlob(b=>{
+    if(!b||!document.body.contains(thumb))return;
+    blob=b;if(shareURL)URL.revokeObjectURL(shareURL);shareURL=URL.createObjectURL(b);
+    thumb.innerHTML=`<img src="${shareURL}" alt="${esc(d.title)} 결과 카드">`;save.disabled=false;
+  },'image/png')).catch(e=>{console.warn('card failed',e);thumb.textContent='카드를 만들지 못했습니다'});
+}
+async function drawCard(d){
+  const W=1080,H=1350,FD='"Black Han Sans","Noto Sans KR",sans-serif',FB='"Noto Sans KR",system-ui,sans-serif',FM='"IBM Plex Mono",ui-monospace,monospace';
+  const C={paper:'#fbf1ee',sheet:'#fffdfc',rule:'#e8a49b',red:'#c8322a',ink:'#1d1e26',muted:'#6f6264',ok:'#2d7a4e',line:'#ecd3cd'};
+  const host=GAME_URL.replace(/^https?:\/\//,'').replace(/\/$/,'');
+  const label=d.final?'5일 근무 최종 평가':`근무 ${d.day}일차 · 중간 평가`;
+  const glyphs='입실 마감 08:10 수능 당일 제12시험지구 정문 '+label+d.title+'누적 점수 오늘 이전 최고 판정 정확도 기록 일차 적발 정상 입실 오판 놓침 미처리 무고 퇴실 부정행위자 통과 검색대에서 AI 가려내 보세요 명 점 % +-−0123456789'+host;
+  try{await Promise.race([Promise.all([`400 90px ${FD}`,`700 40px ${FB}`,`500 40px ${FB}`,`600 40px ${FM}`].map(f=>document.fonts.load(f,glyphs))),new Promise(r=>setTimeout(r,2500))])}catch(e){}
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+  const txt=(s,x,y,font,col,align='left',maxW)=>{g.font=font;g.fillStyle=col;g.textAlign=align;g.textBaseline='alphabetic';
+    if(maxW){let sz=+font.match(/(\d+)px/)[1];while(g.measureText(s).width>maxW&&sz>20){sz-=2;g.font=font.replace(/\d+px/,sz+'px')}}g.fillText(s,x,y)};
+  // 바탕: OMR 답안지
+  g.fillStyle=C.paper;g.fillRect(0,0,W,H);
+  g.fillStyle=C.sheet;g.fillRect(40,40,W-80,H-80);
+  g.strokeStyle=C.line;g.lineWidth=2;g.strokeRect(40,40,W-80,H-80);
+  g.fillStyle=C.red;g.fillRect(40,40,W-80,18);
+  g.fillStyle=C.rule;g.fillRect(92,58,3,H-98);
+  const L=130,R=W-90;
+  txt('수능 당일 · 제12시험지구 정문',L,128,`700 28px ${FB}`,C.muted);
+  txt(label,R,128,`700 28px ${FB}`,C.red,'right');
+  txt('입실 마감 08:10',L,222,`400 86px ${FD}`,C.red);
+  g.fillStyle=C.red;g.fillRect(L,250,R-L,3);
+  // 칭호 도장
+  txt(d.final?'최종 칭호':'현재 칭호',L,318,`700 28px ${FB}`,C.muted);
+  txt(d.title,L,430,`400 116px ${FD}`,C.ink,'left',R-L-210);
+  g.save();g.translate(R-92,370);g.rotate(-.18);g.strokeStyle=C.red;g.lineWidth=7;g.beginPath();g.arc(0,0,82,0,7);g.stroke();
+  g.lineWidth=2.5;g.beginPath();g.arc(0,0,68,0,7);g.stroke();
+  txt(d.final?'근무':'진행',0,-6,`400 34px ${FD}`,C.red,'center');txt(d.final?'완료':`${d.day}/5`,0,36,`400 34px ${FD}`,C.red,'center');g.restore();
+  // 점수 박스
+  const by=478,bh=170;g.strokeStyle=C.ink;g.lineWidth=3;g.strokeRect(L,by,R-L,bh);
+  g.beginPath();g.moveTo(L+(R-L)*.56,by);g.lineTo(L+(R-L)*.56,by+bh);g.stroke();
+  txt(d.final?'최종 점수':'누적 점수',L+28,by+48,`700 26px ${FB}`,C.muted);
+  txt(d.score.toLocaleString('ko-KR'),L+28,by+140,`600 92px ${FM}`,d.score<0?C.red:C.ink,'left',(R-L)*.56-50);
+  const rx=L+(R-L)*.56+28;
+  txt('판정 정확도',rx,by+48,`700 26px ${FB}`,C.muted);
+  txt(`${d.st.acc}%`,rx,by+118,`600 64px ${FM}`,d.st.acc>=88?C.ok:d.st.acc<60?C.red:C.ink);
+  const sub=d.final?(d.best?`이전 최고 ${d.best}점`:'첫 완주 기록'):`오늘 ${d.daySum>0?'+':''}${d.daySum}점`;
+  txt(sub,rx,by+152,`500 24px ${FB}`,C.muted);
+  // 판정 기록: OMR 마킹
+  const gy=708;txt('판정 기록',L,gy,`700 28px ${FB}`,C.red);
+  const days=[1,2,3,4,5].map(n=>S.all.filter(r=>r.day===n));
+  const rowH=66,cx0=L+150,step=86,rad=25;
+  days.forEach((list,i)=>{const y=gy+58+i*rowH,played=i+1<=d.day;
+    g.strokeStyle=C.line;g.lineWidth=1.5;g.beginPath();g.moveTo(L,y+rowH/2);g.lineTo(R,y+rowH/2);g.stroke();
+    txt(`${i+1}일차`,L,y+11,`600 30px ${FM}`,played?C.ink:'#c9b8b4');
+    const n=DAYS[i].n;
+    for(let j=0;j<n;j++){const x=cx0+j*step,r=list[j],o=r?outcome(r):null;
+      g.beginPath();g.ellipse(x,y,rad,rad*.82,0,0,7);
+      if(o==='hit'){g.fillStyle=C.red;g.fill()}
+      else if(o==='ok'){g.fillStyle=C.ok;g.fill()}
+      else if(o==='wrong'||o==='miss'){g.fillStyle='#fff';g.fill();g.strokeStyle=C.ink;g.lineWidth=3;g.stroke();
+        g.beginPath();g.moveTo(x-13,y-13);g.lineTo(x+13,y+13);g.moveTo(x+13,y-13);g.lineTo(x-13,y+13);g.strokeStyle=C.red;g.lineWidth=6;g.stroke()}
+      else if(o==='left'){g.setLineDash([6,6]);g.strokeStyle=C.muted;g.lineWidth=3;g.stroke();g.setLineDash([])}
+      else{g.strokeStyle=played?C.rule:'#efdcd7';g.lineWidth=2.5;g.stroke();txt(String(j+1),x,y+8,`500 20px ${FM}`,played?C.rule:'#e8d3ce','center')}
+    }});
+  // 범례
+  let lx=L;const ly=gy+58+5*rowH-12;
+  [['hit','적발'],['ok','정상 입실'],['x','오판·놓침'],['left','미처리']].forEach(([k,t])=>{
+    const x=lx+14,y=ly;g.beginPath();g.ellipse(x,y,14,11.5,0,0,7);
+    if(k==='hit'){g.fillStyle=C.red;g.fill()}else if(k==='ok'){g.fillStyle=C.ok;g.fill()}
+    else if(k==='x'){g.strokeStyle=C.ink;g.lineWidth=2;g.stroke();g.beginPath();g.moveTo(x-7,y-7);g.lineTo(x+7,y+7);g.moveTo(x+7,y-7);g.lineTo(x-7,y+7);g.strokeStyle=C.red;g.lineWidth=3.5;g.stroke()}
+    else{g.setLineDash([4,4]);g.strokeStyle=C.muted;g.lineWidth=2;g.stroke();g.setLineDash([])}
+    txt(t,x+24,y+9,`500 24px ${FB}`,C.muted);g.font=`500 24px ${FB}`;lx=x+24+g.measureText(t).width+34});
+  // 집계
+  const sy=1160,cells=[['적발',d.st.caught,C.red],['정상 입실',d.st.ok,C.ok],['무고 퇴실',d.st.wrong,C.ink],['놓침',d.st.miss,C.ink],['미처리',d.st.left,C.muted]];
+  const cw=(R-L)/cells.length;
+  g.fillStyle=C.paper;g.fillRect(L,sy-40,R-L,84);
+  cells.forEach(([t,v,col],i)=>{const x=L+cw*i+cw/2;
+    if(i){g.fillStyle=C.line;g.fillRect(L+cw*i,sy-28,2,60)}
+    txt(t,x,sy-8,`700 22px ${FB}`,C.muted,'center');txt(`${v}명`,x,sy+32,`600 36px ${FM}`,col,'center')});
+  // 하단
+  g.fillStyle=C.ink;g.fillRect(40,H-128,W-80,88);
+  txt('검색대에서 AI 부정행위자를 가려내 보세요',L,H-86,`700 30px ${FB}`,'#fff','left',R-L);
+  txt(host,L,H-54,`600 24px ${FM}`,'#f3b7ae','left',R-L);
+  return cv;
 }
 let toastT;
 function toast(msg){let t=document.querySelector('.toast');if(!t){t=document.createElement('div');t.className='toast';t.setAttribute('role','status');document.body.appendChild(t)}
