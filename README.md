@@ -3,9 +3,13 @@
 > 수능 당일 아침 07:30, 시험장 정문 검색대.
 > **08:10 입실 마감 전까지** 줄 선 응시자 중 AI 부정행위자를 가려내세요.
 
-![티저 영상](media/teaser.gif)
+<p align="center">
+  <img src="media/teaser_reels.gif" alt="릴스 티저: 신임교사의 첫 수능 감독! 부정행위 하려는 학생을 잡아라!" width="320">
+</p>
 
-▶ [고화질 티저 영상 (MP4)](media/teaser.mp4) · 📱 [릴스·쇼츠용 세로 티저 (1080×1920, 효과음만 포함)](media/teaser_reels.mp4)
+<p align="center">
+  ▶ <a href="media/teaser_reels.mp4">릴스 티저 원본 (1080×1920, 효과음 포함)</a> · <a href="media/teaser.mp4">가로 티저 (1280×720)</a>
+</p>
 
 AI 이어폰, 카메라 안경, 스마트워치처럼 시험장 밖 AI에게 답을 묻는 수법이 늘고 있습니다.
 당신은 검색대 감독관입니다. 응시자의 몸을 돌려 보고, 확대하고, 도구로 조사한 뒤
