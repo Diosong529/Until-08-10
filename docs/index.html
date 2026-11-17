@@ -116,6 +116,7 @@ button:focus-visible{outline:3px solid var(--scan);outline-offset:2px}
 .sheet p{line-height:1.65;margin:8px 0;max-width:62ch}
 .sheet .eyebrow{font-size:11px;letter-spacing:.14em;color:var(--muted);font-weight:700}
 .sheet .go:disabled{opacity:.55;cursor:progress}
+.go-row{display:flex;flex-wrap:wrap;gap:8px}.sheet .go.alt{background:var(--sheet);color:var(--red);border:2px solid var(--red)}
 .sheet .go{margin-top:14px;background:var(--ink);color:#fff;border:none;padding:12px 22px;font-size:15px;font-weight:700}
 .score-table{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0}
 .score-table td,.score-table th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
@@ -1166,8 +1167,26 @@ function decide(catchIt){
   beep(catchIt?220:660,.15,'sawtooth',.03);
   toast(catchIt?`${p.name} 응시자를 퇴실 조치했습니다.`:`${p.name} 응시자를 입실시켰습니다.`);
   S.cur=null;
-  if(!spend(.5)){renderTools();return}
-  nextPerson();
+  const go=()=>{if(!spend(.5)){renderTools();return}nextPerson()};
+  if(!catchIt&&p.cheat){const miss=tally([...S.all,...S.results]).miss;if(miss&&miss%MISS_LIMIT===0){missReport(miss,go);return}}
+  go();
+}
+// 부정행위자를 MISS_LIMIT명 놓칠 때마다 시험실에서 적발 보고가 올라오고, 계속 근무할지 고른다.
+const MISS_LIMIT=3;
+function missReport(miss,cont){
+  walkOut();overviewView();renderAll();
+  const list=[...S.all,...S.results],st=tally(list),rk=rankOf(st,S.day);
+  const missed=list.filter(r=>r.verdict==='pass'&&r.p.cheat).slice(-MISS_LIMIT);
+  const rows=missed.map(r=>`<tr><td>${esc(r.p.name)}</td><td>${r.day}일차</td><td><span class="bad">${esc(r.p.reasons.join(', '))}</span></td></tr>`).join('');
+  beep(180,.35,'sawtooth',.05);
+  modal(`<div class="eyebrow">근무 ${S.day}일차 ${clock(S.t)} · 시험실 감독관 보고</div><h2>통과시킨 부정행위자가 ${miss}명이 됐습니다</h2>
+  <p>당신이 입실시킨 응시자가 시험 도중 시험실에서 적발됐습니다. 교육청이 이 검색대를 지켜보고 있습니다.</p>
+  <div class="tbl-wrap"><table class="score-table"><thead><tr><th>응시자</th><th>입실일</th><th>적발 사유</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="pointgrid"><span>누적 점수</span><span><b>${S.score}</b></span><span>판정 정확도</span><span>${st.acc}%</span><span>현재 칭호</span><span>${rk.title}</span>
+  <span>오늘 남은 응시자</span><span>${S.queue.length}명</span></div>
+  <p>계속 근무하시겠습니까? 그만두면 지금까지의 기록으로 최종 평가를 받습니다.</p>${SHARE_SLOT}`,
+  '계속 근무',cont,'근무 그만두기',()=>{S.all.push(...S.results);S.results=[];S.queue=[];renderHud();final(true)});
+  shareBox({final:false,day:S.day,score:S.score,daySum:S.results.reduce((a,r)=>a+r.pts,0),st,title:rk.title,extra:S.results});
 }
 
 // ═════════ UI ═════════
@@ -1210,9 +1229,10 @@ function renderLog(){const l=S.cur?S.cur.ins.log:[];
 function renderRules(){$('#rules').innerHTML=rulesFor(S.day).map(r=>`<li class="${r.d===S.day&&S.day>1?'new':''}">${esc(r.t)}</li>`).join('')}
 function renderAll(){$('#who').textContent=S.cur?`${S.cur.name} (${S.idx}번째)`:'—';renderHud();renderTools();renderDocs();renderFound();renderLog()}
 
-function modal(html,btn,fn){
-  $('#sheet').innerHTML=html+`<button class="go" id="go">${btn}</button>`;
+function modal(html,btn,fn,btn2,fn2){
+  $('#sheet').innerHTML=html+`<div class="go-row"><button class="go" id="go">${btn}</button>${btn2?`<button class="go alt" id="go2">${btn2}</button>`:''}</div>`;
   $('#modal').hidden=false;const g=$('#go');g.focus();g.onclick=()=>{$('#modal').hidden=true;fn()};
+  if(btn2)$('#go2').onclick=()=>{$('#modal').hidden=true;fn2()};
 }
 function briefing(){
   const d=DAYS[S.day-1];
@@ -1234,16 +1254,16 @@ function endDay(){
   const st=tally(S.all),rk=rankOf(st,S.day);
   shareBox({final:false,day:S.day,score:S.score,daySum,st,title:rk.title});
 }
-function final(){
-  const st=tally(S.all),{caught,wrong,miss,ok,left,acc}=st,{title,txt}=rankOf(st,5);
+function final(quit=false){
+  const st=tally(S.all),{caught,wrong,miss,ok,left,acc}=st,{title,txt}=rankOf(st,quit?S.day:5);
   let best=0;try{best=+localStorage.getItem('exam-best')||0;if(S.score>best)localStorage.setItem('exam-best',S.score)}catch(e){}
-  modal(`<div class="eyebrow">5일 근무 최종 평가</div><h1>${title}</h1><p>${txt}</p>
+  modal(`<div class="eyebrow">${quit?`근무 ${S.day}일차에 그만둠 · 최종 평가`:'5일 근무 최종 평가'}</div><h1>${title}</h1><p>${txt}</p>
   <div class="pointgrid"><span>부정행위 적발</span><span>${caught}명</span><span>정상 입실</span><span>${ok}명</span>
   <span>무고한 수험생 퇴실</span><span class="bad">${wrong}명</span><span>부정행위자 통과</span><span class="bad">${miss}명</span>
   <span>마감으로 미처리</span><span>${left}명</span><span>판정 정확도</span><span>${acc}%</span>
   <span><b>최종 점수</b></span><span><b>${S.score}</b></span>${best?`<span>이전 최고 점수</span><span>${best}</span>`:''}</div>${SHARE_SLOT}`,
   '처음부터 다시',()=>{S.day=1;S.score=0;S.all=[];briefing()});
-  shareBox({final:true,day:5,score:S.score,st,title,best});
+  shareBox({final:true,quit,day:quit?S.day:5,score:S.score,st,title,best});
 }
 // ═════════ 결과 공유: 카드 이미지 · SNS ═════════
 function tally(list){
@@ -1277,11 +1297,11 @@ const GAME_URL=(()=>{const h=location.hostname;
 const outcome=r=>!r.verdict?'left':r.verdict==='catch'?(r.p.cheat?'hit':'wrong'):(r.p.cheat?'miss':'ok');
 let shareURL=null;
 function shareText(d){
-  const head=d.final?`5일 근무 최종 평가: 「${d.title}」`:`근무 ${d.day}일차 · 중간 평가 「${d.title}」`;
+  const head=d.quit?`${d.day}일차에 근무를 그만둠: 「${d.title}」`:d.final?`5일 근무 최종 평가: 「${d.title}」`:`근무 ${d.day}일차 · 중간 평가 「${d.title}」`;
   return `[입실 마감 08:10] ${head}\n누적 ${d.score}점 · 판정 정확도 ${d.st.acc}% · 부정행위자 ${d.st.caught}명 적발\n수능 시험장 검색대에서 AI 부정행위자를 가려내 보세요.\n#입실마감0810 #수능 #부정행위검문`;
 }
 function shareBox(d){
-  const text=shareText(d),url=GAME_URL,file=`until-0810-${d.final?'final':'day'+d.day}.png`;
+  const text=shareText(d),url=GAME_URL,file=`until-0810-${d.quit?'quit'+d.day:d.final?'final':'day'+d.day}.png`;
   let blob=null;
   const thumb=$('#shThumb'),save=$('#shSave'),nat=$('#shNative');
   const open=u=>window.open(u,'_blank','noopener,width=620,height=560');
@@ -1312,7 +1332,7 @@ async function drawCard(d){
   const W=1080,H=1350,FD='"Black Han Sans","Noto Sans KR",sans-serif',FB='"Noto Sans KR",system-ui,sans-serif',FM='"IBM Plex Mono",ui-monospace,monospace';
   const C={paper:'#fbf1ee',sheet:'#fffdfc',rule:'#e8a49b',red:'#c8322a',ink:'#1d1e26',muted:'#6f6264',ok:'#2d7a4e',line:'#ecd3cd'};
   const host=GAME_URL.replace(/^https?:\/\//,'').replace(/\/$/,'');
-  const label=d.final?'5일 근무 최종 평가':`근무 ${d.day}일차 · 중간 평가`;
+  const label=d.quit?`근무 ${d.day}일차 · 중도 종료`:d.final?'5일 근무 최종 평가':`근무 ${d.day}일차 · 중간 평가`;
   const glyphs='입실 마감 08:10 수능 당일 제12시험지구 정문 '+label+d.title+'누적 점수 오늘 이전 최고 판정 정확도 기록 일차 적발 정상 입실 오판 놓침 미처리 무고 퇴실 부정행위자 통과 검색대에서 AI 가려내 보세요 명 점 % +-−0123456789'+host;
   try{await Promise.race([Promise.all([`400 90px ${FD}`,`700 40px ${FB}`,`500 40px ${FB}`,`600 40px ${FM}`].map(f=>document.fonts.load(f,glyphs))),new Promise(r=>setTimeout(r,2500))])}catch(e){}
   const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
@@ -1334,7 +1354,7 @@ async function drawCard(d){
   txt(d.title,L,430,`400 116px ${FD}`,C.ink,'left',R-L-210);
   g.save();g.translate(R-92,370);g.rotate(-.18);g.strokeStyle=C.red;g.lineWidth=7;g.beginPath();g.arc(0,0,82,0,7);g.stroke();
   g.lineWidth=2.5;g.beginPath();g.arc(0,0,68,0,7);g.stroke();
-  txt(d.final?'근무':'진행',0,-6,`400 34px ${FD}`,C.red,'center');txt(d.final?'완료':`${d.day}/5`,0,36,`400 34px ${FD}`,C.red,'center');g.restore();
+  txt(d.quit?'중도':d.final?'근무':'진행',0,-6,`400 34px ${FD}`,C.red,'center');txt(d.quit?'종료':d.final?'완료':`${d.day}/5`,0,36,`400 34px ${FD}`,C.red,'center');g.restore();
   // 점수 박스
   const by=478,bh=170;g.strokeStyle=C.ink;g.lineWidth=3;g.strokeRect(L,by,R-L,bh);
   g.beginPath();g.moveTo(L+(R-L)*.56,by);g.lineTo(L+(R-L)*.56,by+bh);g.stroke();
@@ -1347,7 +1367,7 @@ async function drawCard(d){
   txt(sub,rx,by+152,`500 24px ${FB}`,C.muted);
   // 판정 기록: OMR 마킹
   const gy=708;txt('판정 기록',L,gy,`700 28px ${FB}`,C.red);
-  const days=[1,2,3,4,5].map(n=>S.all.filter(r=>r.day===n));
+  const all=[...S.all,...(d.extra||[])],days=[1,2,3,4,5].map(n=>all.filter(r=>r.day===n));
   const rowH=66,cx0=L+150,step=86,rad=25;
   days.forEach((list,i)=>{const y=gy+58+i*rowH,played=i+1<=d.day;
     g.strokeStyle=C.line;g.lineWidth=1.5;g.beginPath();g.moveTo(L,y+rowH/2);g.lineTo(R,y+rowH/2);g.stroke();
