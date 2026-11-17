@@ -103,7 +103,8 @@ itch.io, Netlify Drop 배포 방법은 [`docs/README.md`](docs/README.md)를 보
 ├── media/
 │   ├── teaser.mp4       티저 영상 (1280×720, 30fps)
 │   ├── teaser_reels.mp4 릴스·쇼츠용 세로 티저 (1080×1920, 28초, 효과음만 · 배경음악은 릴스에서 추가)
-│   └── teaser.gif       README용 미리보기
+│   ├── teaser.gif       가로 티저 미리보기
+│   └── teaser_reels.gif README 메인 미리보기 (세로)
 └── docs/                게임 본체 (정적 사이트 루트)
     ├── index.html       게임 코드 (HTML·CSS·JS 한 파일)
     ├── lib/             three.js 0.160.0, three-vrm 3.1.0 (CDN 없이 동작)
