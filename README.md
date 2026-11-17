@@ -125,3 +125,7 @@ itch.io, Netlify Drop 배포 방법은 [`docs/README.md`](docs/README.md)를 보
 캐릭터 모델(VRoid AvatarSample A·B·C, VRM1 Constraint Twist Sample, Seed-san, 니코니 입체짱)과
 라이브러리의 출처·라이선스·배포 시 주의사항은 [`docs/CREDITS.md`](docs/CREDITS.md)에 정리되어 있습니다.
 특히 게임을 **유료로 판매**하거나 **법인 명의로 배포**하려면 먼저 해당 문서의 주의 사항을 확인하세요.
+
+---
+
+Copyright © DioSong529 · Instagram [@jeonyoung_](https://www.instagram.com/jeonyoung_/)

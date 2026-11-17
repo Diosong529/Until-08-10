@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="수능 시험장 입구에서 AI 부정행위자를 가려내는 판별 게임">
+<meta name="author" content="DioSong529">
 <meta name="theme-color" content="#fbf1ee">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>입실 마감 08:10</title>
@@ -165,6 +166,7 @@ button:focus-visible{outline:3px solid var(--scan);outline-offset:2px}
   .toast{bottom:auto;top:calc(54px + env(safe-area-inset-top,0px))}
 }
 @media (max-width:900px) and (prefers-reduced-motion:reduce){.side{transition:none}}
+.credit{font-size:11.5px;color:var(--muted);margin:10px 0 0}.credit a{color:var(--red);font-weight:700;text-decoration:none}.credit a:hover{text-decoration:underline}
 .err{padding:20px;color:var(--red);font-weight:700}
 .share{margin-top:14px;padding-top:12px;border-top:1px dashed var(--rule);display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:start}
 @media (max-width:480px){.share{grid-template-columns:96px minmax(0,1fr)}}
@@ -1261,11 +1263,12 @@ function final(quit=false){
   <div class="pointgrid"><span>부정행위 적발</span><span>${caught}명</span><span>정상 입실</span><span>${ok}명</span>
   <span>무고한 수험생 퇴실</span><span class="bad">${wrong}명</span><span>부정행위자 통과</span><span class="bad">${miss}명</span>
   <span>마감으로 미처리</span><span>${left}명</span><span>판정 정확도</span><span>${acc}%</span>
-  <span><b>최종 점수</b></span><span><b>${S.score}</b></span>${best?`<span>이전 최고 점수</span><span>${best}</span>`:''}</div>${SHARE_SLOT}`,
+  <span><b>최종 점수</b></span><span><b>${S.score}</b></span>${best?`<span>이전 최고 점수</span><span>${best}</span>`:''}</div>${SHARE_SLOT}${CREDIT}`,
   '처음부터 다시',()=>{S.day=1;S.score=0;S.all=[];briefing()});
   shareBox({final:true,quit,day:quit?S.day:5,score:S.score,st,title,best});
 }
 // ═════════ 결과 공유: 카드 이미지 · SNS ═════════
+const CREDIT=`<p class="credit">Copyright © DioSong529 · Instagram <a href="https://www.instagram.com/jeonyoung_/" target="_blank" rel="noopener">@jeonyoung_</a></p>`;
 function tally(list){
   const c=k=>list.filter(k).length;
   const caught=c(r=>r.verdict==='catch'&&r.p.cheat), wrong=c(r=>r.verdict==='catch'&&!r.p.cheat),
@@ -1333,7 +1336,7 @@ async function drawCard(d){
   const C={paper:'#fbf1ee',sheet:'#fffdfc',rule:'#e8a49b',red:'#c8322a',ink:'#1d1e26',muted:'#6f6264',ok:'#2d7a4e',line:'#ecd3cd'};
   const host=GAME_URL.replace(/^https?:\/\//,'').replace(/\/$/,'');
   const label=d.quit?`근무 ${d.day}일차 · 중도 종료`:d.final?'5일 근무 최종 평가':`근무 ${d.day}일차 · 중간 평가`;
-  const glyphs='입실 마감 08:10 수능 당일 제12시험지구 정문 '+label+d.title+'누적 점수 오늘 이전 최고 판정 정확도 기록 일차 적발 정상 입실 오판 놓침 미처리 무고 퇴실 부정행위자 통과 검색대에서 AI 가려내 보세요 명 점 % +-−0123456789'+host;
+  const glyphs='입실 마감 08:10 수능 당일 제12시험지구 정문 '+label+d.title+'누적 점수 오늘 이전 최고 판정 정확도 기록 일차 적발 정상 입실 오판 놓침 미처리 무고 퇴실 부정행위자 통과 검색대에서 AI 가려내 보세요 명 점 % +-−0123456789'+host+'Copyright © DioSong529 Instagram @jeonyoung_';
   try{await Promise.race([Promise.all([`400 90px ${FD}`,`700 40px ${FB}`,`500 40px ${FB}`,`600 40px ${FM}`].map(f=>document.fonts.load(f,glyphs))),new Promise(r=>setTimeout(r,2500))])}catch(e){}
   const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
   const txt=(s,x,y,font,col,align='left',maxW)=>{g.font=font;g.fillStyle=col;g.textAlign=align;g.textBaseline='alphabetic';
@@ -1400,7 +1403,8 @@ async function drawCard(d){
   // 하단
   g.fillStyle=C.ink;g.fillRect(40,H-128,W-80,88);
   txt('검색대에서 AI 부정행위자를 가려내 보세요',L,H-86,`700 30px ${FB}`,'#fff','left',R-L);
-  txt(host,L,H-54,`600 24px ${FM}`,'#f3b7ae','left',R-L);
+  txt(host,L,H-54,`600 24px ${FM}`,'#f3b7ae','left',R-L-300);
+  txt('© DioSong529 · @jeonyoung_',R,H-54,`500 22px ${FB}`,'#c9c3c4','right');
   return cv;
 }
 let toastT;
@@ -1427,7 +1431,7 @@ modal(`<div class="eyebrow">수능 당일 · 제12시험지구 정문</div><h1>�
 <p>응시자의 몸을 눌러 <b>확대</b>하고, 드래그해서 <b>돌려 보고</b>, 도구로 조사한 뒤 <b>입실 허가</b> 또는 <b>부정행위 적발</b>을 고르세요. 금속탐지기는 벨트와 안경에도 울립니다.</p>
 <div class="pointgrid"><span>부정행위자 적발</span><span>+100</span><span>정상 응시자 입실</span><span>+50</span><span>무고한 응시자 퇴실</span><span>−150</span><span>부정행위자 통과</span><span>−100</span><span>마감 시간까지 미처리</span><span>−30</span></div>
 <p style="font-size:12px;color:var(--muted)">단축키: 1 육안 · 2 금속탐지 · 3 정밀수색 · 4 필통 · 5 명단 · 6 전파 · 7 질문 · Space·Esc·우클릭·빈 곳 클릭 = 전체 보기</p>
-<p style="font-size:11px;color:var(--muted)">캐릭터 모델: VRoid AvatarSample A·B·C (VRoid Project), VRM1 Constraint Twist Sample (© pixiv Inc.), Seed-san (© VirtualCast, Inc., VRM Public License 1.0), 니코니 입체짱 (©dwango, inc.)</p>`,'근무 시작',briefing);
+<p style="font-size:11px;color:var(--muted)">캐릭터 모델: VRoid AvatarSample A·B·C (VRoid Project), VRM1 Constraint Twist Sample (© pixiv Inc.), Seed-san (© VirtualCast, Inc., VRM Public License 1.0), 니코니 입체짱 (©dwango, inc.)</p>${CREDIT}`,'근무 시작',briefing);
 {const go=$('#go');go.disabled=true;go.textContent='캐릭터 모델 불러오는 중 0%';
  loadVRM(pc=>{go.textContent=`캐릭터 모델 불러오는 중 ${pc}%`}).then(()=>{
    const ex=person;scene.remove(ex);disposeTree(ex);const a=VR.actors[0];a.dress({hairHue:0,eyeHue:0,clothHue:0,mole:0,glasses:null},null);a.root.scale.setScalar(1.66/a.A.height);person=a.root;scene.add(person)
