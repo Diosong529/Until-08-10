@@ -274,9 +274,9 @@ const TOOLS={
 };
 const DAYS=[
   {n:5,news:'첫 근무입니다. 수험생이 시험실에 들어가기 전에 반입 금지 물품을 가려내세요. 금속탐지기는 금속에만 반응합니다. 벨트나 안경처럼 문제없는 금속에도 울립니다.'},
-  {n:6,news:'대리시험 조직이 이 시험지구에서 움직인다는 첩보가 들어왔습니다. 응시자 명단 조회가 열렸습니다. 수험표 사진, 명단 사진, 실제 얼굴을 확대해서 대조하세요.'},
+  {n:6,news:'대리시험 조직이 이 시험장에서 움직인다는 첩보가 들어왔습니다. 응시자 명단 조회가 열렸습니다. 수험표 사진, 명단 사진, 실제 얼굴을 확대해서 대조하세요.'},
   {n:6,news:'귓속에 숨기는 초소형 무선 이어폰이 대량 유통되고 있습니다. 전파탐지기가 지급됐습니다. 무선 신호를 내는 위치를 알려줍니다.'},
-  {n:7,news:'교육청 지침이 바뀌었습니다. 오늘부터 아날로그를 포함한 모든 손목시계를 반입할 수 없습니다. 시험실 앞 벽시계를 보게 하세요.'},
+  {n:7,news:'시험 주관 기관의 지침이 바뀌었습니다. 오늘부터 아날로그를 포함한 모든 손목시계를 반입할 수 없습니다. 시험실 앞 벽시계를 보게 하세요.'},
   {n:7,news:'청각장애 수험생 편의 지원이 시작됐습니다. 보청기는 명단 비고란에 사전 신고가 있을 때만 허용합니다. 신고가 없으면 반입 금지입니다.'},
 ];
 function rulesFor(d){
@@ -320,7 +320,7 @@ function mutateIdentity(a){
   if(chance(.4)){b.style=(a.style+1)%4;b.hairHue=(a.hairHue+pick([40,90,180]))%360}
   return b;
 }
-function birth(){return `2008.${pad(1+Math.floor(rnd()*12))}.${pad(1+Math.floor(rnd()*28))}`}
+function birth(){const r=rnd()*12;return `${1975+Math.floor((r%1)*33)}.${pad(1+Math.floor(r))}.${pad(1+Math.floor(rnd()*28))}`}
 function addItem(p,id){
   const it=ITEMS[id];
   if(it.case){p.caseItems.push(id);return true}
@@ -657,7 +657,7 @@ const floor=new THREE.Mesh(new THREE.PlaneGeometry(12,12),toon('#ffffff',{map:fl
 const wall=new THREE.Mesh(new THREE.PlaneGeometry(12,4),toon('#d6e2d4'));wall.position.set(0,2,-1.4);env.add(wall);
 const wains=new THREE.Mesh(new THREE.PlaneGeometry(12,.95),toon('#8fa894'));wains.position.set(0,.475,-1.395);env.add(wains);
 part(box(12,.05,.04),'#6f8a75',env,{pos:[0,.96,-1.38],ol:0});
-const signTex=canvasTex(512,128,(g,w,h)=>{g.fillStyle='#1f3b2c';g.fillRect(0,0,w,h);g.fillStyle='#fff';g.font='bold 46px "Noto Sans KR",sans-serif';g.textAlign='center';g.fillText('제12시험지구 · 제5시험실',w/2,80)});
+const signTex=canvasTex(512,128,(g,w,h)=>{g.fillStyle='#1f3b2c';g.fillRect(0,0,w,h);g.fillStyle='#fff';g.font='bold 46px "Noto Sans KR",sans-serif';g.textAlign='center';g.fillText('제12시험장 · 제5시험실',w/2,80)});
 const sign=new THREE.Mesh(new THREE.PlaneGeometry(1.2,.3),new THREE.MeshBasicMaterial({map:signTex}));sign.position.set(-1.0,1.86,-1.39);env.add(sign);
 const posterTex=canvasTex(256,360,(g,w,h)=>{g.fillStyle='#fffdf6';g.fillRect(0,0,w,h);g.fillStyle='#c8322a';g.fillRect(0,0,w,70);g.fillStyle='#fff';g.font='bold 34px "Noto Sans KR",sans-serif';g.textAlign='center';g.fillText('반입 금지',w/2,48);
   g.fillStyle='#1d1e26';g.font='bold 22px "Noto Sans KR",sans-serif';['휴대전화','스마트워치','무선 이어폰','디지털 시계','전자사전·계산기'].forEach((t,i)=>g.fillText(t,w/2,120+i*46))});
@@ -1180,7 +1180,7 @@ function missReport(miss,cont){
   const rows=missed.map(r=>`<tr><td>${esc(r.p.name)}</td><td>${r.day}일차</td><td><span class="bad">${esc(r.p.reasons.join(', '))}</span></td></tr>`).join('');
   beep(180,.35,'sawtooth',.05);
   modal(`<div class="eyebrow">근무 ${S.day}일차 ${clock(S.t)} · 시험실 감독관 보고</div><h2>통과시킨 부정행위자가 ${miss}명이 됐습니다</h2>
-  <p>당신이 입실시킨 응시자가 시험 도중 시험실에서 적발됐습니다. 교육청이 이 검색대를 지켜보고 있습니다.</p>
+  <p>당신이 입실시킨 응시자가 시험 도중 시험실에서 적발됐습니다. 시험 주관 기관이 이 검색대를 지켜보고 있습니다.</p>
   <div class="tbl-wrap"><table class="score-table"><thead><tr><th>응시자</th><th>입실일</th><th>적발 사유</th></tr></thead><tbody>${rows}</tbody></table></div>
   <div class="pointgrid"><span>누적 점수</span><span><b>${S.score}</b></span><span>판정 정확도</span><span>${st.acc}%</span><span>현재 칭호</span><span>${rk.title}</span>
   <span>오늘 남은 응시자</span><span>${S.queue.length}명</span></div>
@@ -1211,7 +1211,7 @@ function renderTools(){
 function renderDocs(){
   const p=S.cur;if(!p){$('#docs').innerHTML='';$('#peek').innerHTML='';$('#ticker').hidden=true;return}
   const card=`<div class="doc"><div class="photo"><img src="${p.cardImg}" alt="수험표 사진"></div><dl><span class="tag">수험표</span>
-    <dt>성명</dt><dd>${esc(p.name)}</dd><dt>수험번호</dt><dd class="num">${p.num}</dd><dt>시험실</dt><dd>제12지구 제5실</dd></dl></div>`;
+    <dt>성명</dt><dd>${esc(p.name)}</dd><dt>수험번호</dt><dd class="num">${p.num}</dd><dt>시험실</dt><dd>제12시험장 제5실</dd></dl></div>`;
   const roster=p.rosterImg?`<div class="doc"><div class="photo"><img src="${p.rosterImg}" alt="명단 사진"></div><dl><span class="tag">응시자 명단</span>
     <dt>성명</dt><dd>${esc(p.name)}</dd><dt>수험번호</dt><dd class="num">${p.num}</dd><dt>생년월일</dt><dd class="num">${p.rosterBirth}</dd>
     ${p.hearingNote?'<span class="note">비고: 보청기 사전 신고</span>':''}</dl></div>`
@@ -1276,9 +1276,9 @@ function tally(list){
 function rankOf({acc,wrong,miss,left},days=5){
   const f=days/5,lim=n=>Math.max(2,Math.ceil(n*f));
   if(acc>=88&&wrong<=1)return{title:'명감독관',txt:'부정행위자는 빠짐없이 걸렀고 억울한 수험생은 거의 없었습니다. 내년에도 이 시험장을 맡아 달라는 요청이 왔습니다.'};
-  if(wrong>=lim(4))return{title:'공포의 감독관',txt:'잡아낸 사람도 많았지만 죄 없는 수험생까지 퇴실시켰습니다. 교육청 민원 게시판이 당신 이야기로 가득합니다.'};
+  if(wrong>=lim(4))return{title:'공포의 감독관',txt:'잡아낸 사람도 많았지만 죄 없는 수험생까지 퇴실시켰습니다. 시험 주관 기관 민원 게시판이 당신 이야기로 가득합니다.'};
   if(miss>=lim(4))return{title:'구멍 난 검색대',txt:'시험이 끝난 뒤 이어폰과 카메라 안경이 무더기로 적발됐습니다. 이 시험장 성적은 재검토 대상이 됐습니다.'};
-  if(left>=lim(5))return{title:'느림보 감독관',txt:'꼼꼼했지만 너무 느렸습니다. 마감 시간을 넘겨 들어가지 못한 수험생의 학부모들이 항의하고 있습니다.'};
+  if(left>=lim(5))return{title:'느림보 감독관',txt:'꼼꼼했지만 너무 느렸습니다. 마감 시간을 넘겨 들어가지 못한 수험생들이 항의하고 있습니다.'};
   return{title:'평범한 감독관',txt:'큰 사고 없이 시험이 끝났습니다. 다만 놓친 사람과 억울한 사람이 몇 명 있었습니다.'};
 }
 const SHARE_SLOT=`<div class="share" id="share"><div class="thumb" id="shThumb">카드 만드는 중…</div><div>
@@ -1333,7 +1333,7 @@ async function drawCard(d){
   const C={paper:'#fbf1ee',sheet:'#fffdfc',rule:'#e8a49b',red:'#c8322a',ink:'#1d1e26',muted:'#6f6264',ok:'#2d7a4e',line:'#ecd3cd'};
   const host=GAME_URL.replace(/^https?:\/\//,'').replace(/\/$/,'');
   const label=d.quit?`근무 ${d.day}일차 · 중도 종료`:d.final?'5일 근무 최종 평가':`근무 ${d.day}일차 · 중간 평가`;
-  const glyphs='입실 마감 08:10 시험 당일 제12시험지구 정문 '+label+d.title+'누적 점수 오늘 이전 최고 판정 정확도 기록 일차 적발 정상 입실 오판 놓침 미처리 무고 퇴실 부정행위자 통과 검색대에서 AI 가려내 보세요 명 점 % +-−0123456789'+host;
+  const glyphs='입실 마감 08:10 시험 당일 제12시험장 정문 '+label+d.title+'누적 점수 오늘 이전 최고 판정 정확도 기록 일차 적발 정상 입실 오판 놓침 미처리 무고 퇴실 부정행위자 통과 검색대에서 AI 가려내 보세요 명 점 % +-−0123456789'+host;
   try{await Promise.race([Promise.all([`400 90px ${FD}`,`700 40px ${FB}`,`500 40px ${FB}`,`600 40px ${FM}`].map(f=>document.fonts.load(f,glyphs))),new Promise(r=>setTimeout(r,2500))])}catch(e){}
   const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
   const txt=(s,x,y,font,col,align='left',maxW)=>{g.font=font;g.fillStyle=col;g.textAlign=align;g.textBaseline='alphabetic';
@@ -1345,7 +1345,7 @@ async function drawCard(d){
   g.fillStyle=C.red;g.fillRect(40,40,W-80,18);
   g.fillStyle=C.rule;g.fillRect(92,58,3,H-98);
   const L=130,R=W-90;
-  txt('시험 당일 · 제12시험지구 정문',L,128,`700 28px ${FB}`,C.muted);
+  txt('시험 당일 · 제12시험장 정문',L,128,`700 28px ${FB}`,C.muted);
   txt(label,R,128,`700 28px ${FB}`,C.red,'right');
   txt('입실 마감 08:10',L,222,`400 86px ${FD}`,C.red);
   g.fillStyle=C.red;g.fillRect(L,250,R-L,3);
@@ -1422,7 +1422,7 @@ renderHud();renderTools();renderRules();renderFound();
 // 첫 화면 뒤에 서 있는 예시 응시자
 person=buildPerson(makeApp(),makePerson(1).items);scene.add(person);
 requestAnimationFrame(frame);
-modal(`<div class="eyebrow">시험 당일 · 제12시험지구 정문</div><h1>입실 마감<br>08:10</h1>
+modal(`<div class="eyebrow">시험 당일 · 제12시험장 정문</div><h1>입실 마감<br>08:10</h1>
 <p>당신은 시험장 입구 검색대의 감독관입니다. AI 이어폰, 카메라 안경, 스마트워치처럼 시험장 밖의 AI에게 답을 묻는 수법이 늘고 있습니다.</p>
 <p>응시자의 몸을 눌러 <b>확대</b>하고, 드래그해서 <b>돌려 보고</b>, 도구로 조사한 뒤 <b>입실 허가</b> 또는 <b>부정행위 적발</b>을 고르세요. 금속탐지기는 벨트와 안경에도 울립니다.</p>
 <div class="pointgrid"><span>부정행위자 적발</span><span>+100</span><span>정상 응시자 입실</span><span>+50</span><span>무고한 응시자 퇴실</span><span>−150</span><span>부정행위자 통과</span><span>−100</span><span>마감 시간까지 미처리</span><span>−30</span></div>
