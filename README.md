@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  ▶ <a href="media/teaser_reels.mp4">릴스 티저 원본 (1080×1920, 효과음 포함)</a> · <a href="media/teaser.mp4">가로 티저 (1280×720)</a>
+  ⬇️ <a href="media/teaser_reels.mp4?raw=true"><b>릴스 티저 다운로드</b> (1080×1920 · 60fps · 효과음만)</a> · <a href="media/teaser.mp4">가로 티저 (1280×720)</a>
 </p>
 
 AI 이어폰, 카메라 안경, 스마트워치처럼 시험장 밖 AI에게 답을 묻는 수법이 늘고 있습니다.
@@ -102,7 +102,7 @@ itch.io, Netlify Drop 배포 방법은 [`docs/README.md`](docs/README.md)를 보
 ├── README.md            이 문서
 ├── media/
 │   ├── teaser.mp4       티저 영상 (1280×720, 30fps)
-│   ├── teaser_reels.mp4 릴스·쇼츠용 세로 티저 (1080×1920, 28초, 효과음만 · 배경음악은 릴스에서 추가)
+│   ├── teaser_reels.mp4 릴스·쇼츠용 세로 티저 (1080×1920, 60fps, 28초, 효과음만 · 배경음악은 릴스에서 추가)
 │   ├── teaser.gif       가로 티저 미리보기
 │   └── teaser_reels.gif README 메인 미리보기 (세로)
 └── docs/                게임 본체 (정적 사이트 루트)
