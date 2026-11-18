@@ -1,10 +1,10 @@
 # Until 08:10 — 입실 마감 08:10
 
-> 수능 당일 아침 07:30, 시험장 정문 검색대.
+> 시험 당일 아침 07:30, 시험장 정문 검색대.
 > **08:10 입실 마감 전까지** 줄 선 응시자 중 AI 부정행위자를 가려내세요.
 
 <p align="center">
-  <img src="media/teaser_reels.gif" alt="릴스 티저: 신임교사의 첫 수능 감독! 부정행위 하려는 학생을 잡아라!" width="320">
+  <img src="media/teaser_reels.gif" alt="릴스 티저: 신임교사의 첫 시험장 감독! 부정행위 하려는 학생을 잡아라!" width="320">
 </p>
 
 <p align="center">

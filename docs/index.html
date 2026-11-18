@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="수능 시험장 입구에서 AI 부정행위자를 가려내는 판별 게임">
+<meta name="description" content="시험장 입구에서 AI 부정행위자를 가려내는 판별 게임">
 <meta name="theme-color" content="#fbf1ee">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>입실 마감 08:10</title>
@@ -182,7 +182,7 @@ button:focus-visible{outline:3px solid var(--scan);outline-offset:2px}
 <body>
 <div class="wrap">
   <header class="hud">
-    <div class="brand">입실 마감 08:10<small>수능 시험장 부정행위 검문</small></div>
+    <div class="brand">입실 마감 08:10<small>시험장 부정행위 검문</small></div>
     <div class="stat"><span>근무일</span><b id="hDay">1 / 5</b></div>
     <div class="stat clock" id="hClockBox"><span>현재 시각</span><b id="hClock">07:30</b></div>
     <div class="stat"><span>대기 인원</span><b id="hQueue">0</b></div>
@@ -244,7 +244,7 @@ const ITEMS={
   phone:{name:'스마트폰',zones:['pants','chest'],metal:3,radio:true,look:'주머니 위로 휴대폰 윗부분이 삐져나와 있다.',ban:()=>true,from:1,w:3,why:'휴대폰 소지'},
   earbud:{name:'초소형 무선 이어폰',zones:['head'],metal:1,radio:true,look:'왼쪽 귓구멍에 작은 흰색 기기가 꽂혀 있다.',ban:()=>true,from:1,w:1,w3:4,why:'귓속 무선 이어폰'},
   smartwatch:{name:'스마트워치',zones:WRIST,metal:2,radio:true,watch:'smart',look:'검은 화면의 사각 시계. 옆면에 버튼이 있다.',ban:()=>true,from:1,w:2,why:'스마트워치'},
-  digiwatch:{name:'디지털 전자시계',zones:WRIST,metal:1,radio:false,watch:'digital',look:'숫자가 표시되는 전자시계. 통신 기능은 없어 보인다.',ban:()=>true,from:1,w:2,why:'디지털 시계(수능 반입 불가)'},
+  digiwatch:{name:'디지털 전자시계',zones:WRIST,metal:1,radio:false,watch:'digital',look:'숫자가 표시되는 전자시계. 통신 기능은 없어 보인다.',ban:()=>true,from:1,w:2,why:'디지털 시계(시험장 반입 불가)'},
   smartglass:{name:'카메라 안경',zones:['eyes'],metal:2,radio:true,glasses:'smart',look:'안경다리가 유난히 두껍고, 경첩 옆에 작은 렌즈 구멍이 있다.',ban:()=>true,from:2,w:2,why:'촬영 기능 안경'},
   camBtn:{name:'단추형 카메라',zones:['chest'],metal:2,radio:true,look:'단추 하나만 유난히 반짝이고 가운데에 작은 구멍이 있다.',ban:()=>true,from:2,w:2,why:'단추형 카메라'},
   palm:{name:'손바닥 커닝 메모',zones:WRIST,metal:0,radio:false,look:'손바닥에 깨알 같은 글씨가 빼곡하다.',ban:()=>true,from:1,w:2,why:'손바닥 메모'},
@@ -1298,7 +1298,7 @@ const outcome=r=>!r.verdict?'left':r.verdict==='catch'?(r.p.cheat?'hit':'wrong')
 let shareURL=null;
 function shareText(d){
   const head=d.quit?`${d.day}일차에 근무를 그만둠: 「${d.title}」`:d.final?`5일 근무 최종 평가: 「${d.title}」`:`근무 ${d.day}일차 · 중간 평가 「${d.title}」`;
-  return `[입실 마감 08:10] ${head}\n누적 ${d.score}점 · 판정 정확도 ${d.st.acc}% · 부정행위자 ${d.st.caught}명 적발\n수능 시험장 검색대에서 AI 부정행위자를 가려내 보세요.\n#입실마감0810 #수능 #부정행위검문`;
+  return `[입실 마감 08:10] ${head}\n누적 ${d.score}점 · 판정 정확도 ${d.st.acc}% · 부정행위자 ${d.st.caught}명 적발\n시험장 검색대에서 AI 부정행위자를 가려내 보세요.\n#입실마감0810 #시험장 #부정행위검문`;
 }
 function shareBox(d){
   const text=shareText(d),url=GAME_URL,file=`until-0810-${d.quit?'quit'+d.day:d.final?'final':'day'+d.day}.png`;
@@ -1333,7 +1333,7 @@ async function drawCard(d){
   const C={paper:'#fbf1ee',sheet:'#fffdfc',rule:'#e8a49b',red:'#c8322a',ink:'#1d1e26',muted:'#6f6264',ok:'#2d7a4e',line:'#ecd3cd'};
   const host=GAME_URL.replace(/^https?:\/\//,'').replace(/\/$/,'');
   const label=d.quit?`근무 ${d.day}일차 · 중도 종료`:d.final?'5일 근무 최종 평가':`근무 ${d.day}일차 · 중간 평가`;
-  const glyphs='입실 마감 08:10 수능 당일 제12시험지구 정문 '+label+d.title+'누적 점수 오늘 이전 최고 판정 정확도 기록 일차 적발 정상 입실 오판 놓침 미처리 무고 퇴실 부정행위자 통과 검색대에서 AI 가려내 보세요 명 점 % +-−0123456789'+host;
+  const glyphs='입실 마감 08:10 시험 당일 제12시험지구 정문 '+label+d.title+'누적 점수 오늘 이전 최고 판정 정확도 기록 일차 적발 정상 입실 오판 놓침 미처리 무고 퇴실 부정행위자 통과 검색대에서 AI 가려내 보세요 명 점 % +-−0123456789'+host;
   try{await Promise.race([Promise.all([`400 90px ${FD}`,`700 40px ${FB}`,`500 40px ${FB}`,`600 40px ${FM}`].map(f=>document.fonts.load(f,glyphs))),new Promise(r=>setTimeout(r,2500))])}catch(e){}
   const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
   const txt=(s,x,y,font,col,align='left',maxW)=>{g.font=font;g.fillStyle=col;g.textAlign=align;g.textBaseline='alphabetic';
@@ -1345,7 +1345,7 @@ async function drawCard(d){
   g.fillStyle=C.red;g.fillRect(40,40,W-80,18);
   g.fillStyle=C.rule;g.fillRect(92,58,3,H-98);
   const L=130,R=W-90;
-  txt('수능 당일 · 제12시험지구 정문',L,128,`700 28px ${FB}`,C.muted);
+  txt('시험 당일 · 제12시험지구 정문',L,128,`700 28px ${FB}`,C.muted);
   txt(label,R,128,`700 28px ${FB}`,C.red,'right');
   txt('입실 마감 08:10',L,222,`400 86px ${FD}`,C.red);
   g.fillStyle=C.red;g.fillRect(L,250,R-L,3);
@@ -1422,7 +1422,7 @@ renderHud();renderTools();renderRules();renderFound();
 // 첫 화면 뒤에 서 있는 예시 응시자
 person=buildPerson(makeApp(),makePerson(1).items);scene.add(person);
 requestAnimationFrame(frame);
-modal(`<div class="eyebrow">수능 당일 · 제12시험지구 정문</div><h1>입실 마감<br>08:10</h1>
+modal(`<div class="eyebrow">시험 당일 · 제12시험지구 정문</div><h1>입실 마감<br>08:10</h1>
 <p>당신은 시험장 입구 검색대의 감독관입니다. AI 이어폰, 카메라 안경, 스마트워치처럼 시험장 밖의 AI에게 답을 묻는 수법이 늘고 있습니다.</p>
 <p>응시자의 몸을 눌러 <b>확대</b>하고, 드래그해서 <b>돌려 보고</b>, 도구로 조사한 뒤 <b>입실 허가</b> 또는 <b>부정행위 적발</b>을 고르세요. 금속탐지기는 벨트와 안경에도 울립니다.</p>
 <div class="pointgrid"><span>부정행위자 적발</span><span>+100</span><span>정상 응시자 입실</span><span>+50</span><span>무고한 응시자 퇴실</span><span>−150</span><span>부정행위자 통과</span><span>−100</span><span>마감 시간까지 미처리</span><span>−30</span></div>
